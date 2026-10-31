@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>CampusLynx</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#eef2f7;--card:#fff;--tx:#12263f;--mut:#667;--side:#06305c;--side2:#0b4a85;--acc:#0a9be8;--bd:#dde3ec;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1520;--card:#16212f;--tx:#e8eef6;--mut:#9ab;--bd:#273548}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--side);color:#fff;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header h1{font-size:18px;margin:0;flex:1}.burger{background:none;border:0;color:#fff;font-size:26px}
+#logo{width:36px;height:36px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:7px;background:conic-gradient(#f33,#fb0,#3c5,#0af,#93f,#f33);user-select:none}
+nav{position:fixed;top:0;bottom:0;left:0;width:82%;max-width:320px;background:linear-gradient(#0b4a85,#06305c 60%);color:#fff;transform:translateX(-100%);transition:.25s;z-index:10;padding:calc(env(safe-area-inset-top,0px) + 16px) 0;overflow:auto}
+nav.open{transform:none}.scrim{position:fixed;inset:0;background:#0006;display:none;z-index:9}.scrim.on{display:block}
+nav .brand{display:flex;gap:10px;align-items:center;padding:0 16px 8px;font-size:20px}nav small{display:block;padding:8px 16px;letter-spacing:.1em;opacity:.7}
+nav button{display:block;width:calc(100% - 8px);text-align:left;background:#ffffff14;border:0;border-bottom:1px solid #0004;color:#fff;font-size:16px;padding:16px 16px;margin-bottom:2px}
+nav button.on{background:#ffffff2e;border-left:4px solid var(--acc)}
+main{padding:14px;max-width:800px;margin:auto}.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+h2{margin:0 0 10px;font-size:18px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px 6px;border-bottom:1px solid var(--bd);text-align:left}
+.wrap{overflow-x:auto}input,select,textarea{width:100%;font:inherit;padding:6px;border:1px solid var(--acc);border-radius:6px;background:var(--bg);color:var(--tx)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{border-radius:12px;padding:14px;color:#fff}.stat b{font-size:24px;display:block}
+.bar{height:8px;background:var(--bd);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:10px 14px;font:inherit}.btn.g{background:#667}
+#edbar{display:none;position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);left:10px;right:10px;background:#c62;color:#fff;padding:10px;border-radius:12px;z-index:6;align-items:center;gap:8px}
+#edbar span{flex:1;font-size:14px}.low{color:#d33;font-weight:600}
+</style></head><body>
+<header><button class="burger" onclick="tog()">☰</button><div id="logo"></div><h1>CampusLynx</h1><button class="btn g" onclick="logout()">Logout</button></header>
+<div class="scrim" id="scrim" onclick="tog()"></div>
+<nav id="nav"><div class="brand"><div id="logo2" style="width:28px;height:28px;border-radius:7px;background:conic-gradient(#f33,#fb0,#3c5,#0af,#93f,#f33)"></div>CampusLynx</div><small>STUDENT</small><div id="menu"></div></nav>
+<main id="main"></main>
+<div id="loginbox" style="display:none;position:fixed;inset:0;z-index:30;align-items:center;justify-content:center;background:linear-gradient(#0b4a85,#06305c)"><div class="card" style="width:85%;max-width:340px;margin:0"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:36px;height:36px;border-radius:9px;background:conic-gradient(#f33,#fb0,#3c5,#0af,#93f,#f33)"></div><b style="font-size:22px">CampusLynx</b></div><h2 id="lt">Student Login</h2><input id="lu" placeholder="Username" autocomplete="username" style="margin-bottom:8px"><input id="lp" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key=='Enter')doLogin()"><p id="lmsg" class="low" style="min-height:18px;margin:6px 0"></p><button id="lb" class="btn" style="width:100%" onclick="doLogin()">Login</button></div></div>
+<div id="pinbox" style="display:none;position:fixed;inset:0;background:#000a;z-index:20;align-items:center;justify-content:center"><div class="card" style="width:80%;max-width:300px;margin:0"><h2>Enter edit PIN</h2><input id="pin" type="password" inputmode="numeric" placeholder="PIN"><p id="pinmsg" class="low" style="min-height:18px;margin:6px 0"></p><div style="display:flex;gap:8px"><button class="btn g" style="flex:1" onclick="pinbox.style.display='none'">Cancel</button><button class="btn" style="flex:1" onclick="checkPin()">Unlock</button></div></div></div>
+<div id="edbar"><span>Edit mode on — changes save automatically</span><button class="btn g" onclick="addRow()">+ Row</button><button class="btn" onclick="lock()">Done</button></div>
+<script>
+const DEF={
+info:{title:"My Personal Info",kind:"form",rows:[["Name","Your Name"],["Roll No","CL-2026-001"],["Course","B.Tech CSE"],["Semester","5"],["Email","you@example.com"],["Phone","+91 00000 00000"]]},
+fee:{title:"Academic / Misc. Fee",kind:"table",cols:["Fee","Amount ₹","Status"],rows:[["Tuition","45000","Paid"],["Exam","1500","Paid"],["Library","500","Pending"]]},
+reg:{title:"Registration",kind:"table",cols:["Code","Course","Credits"],rows:[["CS501","Operating Systems","4"],["CS502","Databases","4"],["CS503","Networks","3"]]},
+att:{title:"Class and Attendance",kind:"table",cols:["Subject","Held","Attended"],rows:[["Operating Systems","40","36"],["Databases","38","30"],["Networks","35","33"]]},
+res:{title:"Exam and Result",kind:"table",cols:["Subject","Marks","Grade"],rows:[["Operating Systems","78","A"],["Databases","85","A+"],["Networks","69","B+"]]},
+mooc:{title:"MOOC Subjects",kind:"table",cols:["Course","Platform","Progress %"],rows:[["Machine Learning","NPTEL","60"],["Cloud Basics","Coursera","30"]]},
+fb:{title:"Feed Back",kind:"table",cols:["Subject","Rating (1-5)","Comment"],rows:[["Operating Systems","4","Good labs"],["Databases","5","Clear teaching"]]}};
+const ORDER=["dash","fb","info","fee","reg","att","res","mooc"];
+let D,cur="dash",edit=false,PIN="1234";
+try{D=JSON.parse(localStorage.getItem("cl_data"));PIN=localStorage.getItem("cl_pin")||PIN}catch(e){}
+if(!D)D=JSON.parse(JSON.stringify(DEF));
+const save=()=>{try{localStorage.setItem("cl_data",JSON.stringify(D))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function tog(){nav.classList.toggle("open");scrim.classList.toggle("on")}
+function go(k){cur=k;nav.classList.remove("open");scrim.classList.remove("on");render()}
+function pct(r){const h=+r[1]||0,a=+r[2]||0;return h?Math.round(a/h*100):0}
+function render(){
+menu.innerHTML=ORDER.map(k=>`<button class="${k==cur?"on":""}" onclick="go('${k}')">${k=="dash"?"▦ View My Dashboard":"👤 "+DEF[k].title}</button>`).join("");
+if(cur=="dash"){const at=D.att.rows,tot=at.reduce((s,r)=>s+(+r[1]||0),0),att=at.reduce((s,r)=>s+(+r[2]||0),0);
+const ap=tot?Math.round(att/tot*100):0,pend=D.fee.rows.filter(r=>r[2]!="Paid").length;
+main.innerHTML=`<div class="stats"><div class="stat" style="background:#0a9be8"><b>${ap}%</b>Attendance</div><div class="stat" style="background:#0bbf5b"><b>${D.reg.rows.length}</b>Courses</div><div class="stat" style="background:#f59a0b"><b>${pend}</b>Fees pending</div><div class="stat" style="background:#7a5af8"><b>${D.mooc.rows.length}</b>MOOCs</div></div><div class="card" style="margin-top:14px"><h2>Welcome, ${esc(D.info.rows[0][1])}</h2><p style="color:var(--mut);margin:0">Use the menu (☰) to open any section.</p></div>`;return}
+const s=D[cur];let h=`<div class="card"><h2>${s.title}</h2><div class="wrap">`;
+if(s.kind=="form"){h+="<table>"+s.rows.map((r,i)=>`<tr><th>${esc(r[0])}</th><td>${cell(i,1,r[1])}</td></tr>`).join("")+"</table>"}
+else{h+="<table><tr>"+s.cols.map(c=>`<th>${c}</th>`).join("")+(cur=="att"?"<th>%</th>":"")+(edit?"<th></th>":"")+"</tr>"+
+s.rows.map((r,i)=>"<tr>"+r.map((v,j)=>`<td>${cell(i,j,v)}</td>`).join("")+(cur=="att"?`<td class="${pct(r)<75?"low":""}">${pct(r)}%</td>`:"")+(edit?`<td><button class="btn g" onclick="delRow(${i})">✕</button></td>`:"")+"</tr>").join("")+"</table>"}
+main.innerHTML=h+"</div></div>"+(edit?"<div style='height:70px'></div>":"")}
+function cell(i,j,v){return edit?`<input value="${esc(v)}" oninput="D['${cur}'].rows[${i}][${j}]=this.value;save()" onchange="render()">`:esc(v)}
+function addRow(){const s=D[cur];if(!s||!s.cols)return;s.rows.push(s.cols.map(()=>""));save();render()}
+function delRow(i){D[cur].rows.splice(i,1);save();render()}
+function unlock(){pinbox.style.display="flex";pin.value="";pinmsg.textContent="";setTimeout(()=>pin.focus(),50)}
+function checkPin(){if(pin.value===PIN){pinbox.style.display="none";edit=true;edbar.style.display="flex";render()}else pinmsg.textContent="Wrong PIN"}
+function lock(){edit=false;edbar.style.display="none";render()}
+// hidden edit entry: tap the logo 5 times quickly
+let taps=0,tt;document.querySelectorAll("#logo,#logo2").forEach(e=>e.onclick=()=>{taps++;clearTimeout(tt);tt=setTimeout(()=>taps=0,1500);if(taps>=5){taps=0;edit?lock():unlock()}});
+async function h(s){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return s}}
+let ACC=null;try{ACC=JSON.parse(localStorage.getItem("cl_acc"))}catch(e){}
+function showLogin(){loginbox.style.display="flex";lmsg.textContent="";lt.textContent=ACC?"Student Login":"Create your account";lb.textContent=ACC?"Login":"Create account"}
+async function doLogin(){const u=lu.value.trim(),p=lp.value;if(!u||p.length<4){lmsg.textContent="Enter a username and a password (min 4 characters)";return}
+const hp=await h(p);
+if(!ACC){ACC={u:u,p:hp};try{localStorage.setItem("cl_acc",JSON.stringify(ACC))}catch(e){}}
+else if(ACC.u!==u||ACC.p!==hp){lmsg.textContent="Wrong username or password";return}
+try{sessionStorage.setItem("cl_in","1")}catch(e){}
+loginbox.style.display="none";lp.value=""}
+function logout(){try{sessionStorage.removeItem("cl_in")}catch(e){}lock();nav.classList.remove("open");scrim.classList.remove("on");showLogin()}
+let inn=false;try{inn=sessionStorage.getItem("cl_in")=="1"}catch(e){}
+if(!inn)showLogin();
+render();
+</script></body></html>
